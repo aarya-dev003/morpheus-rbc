@@ -57,12 +57,13 @@ class QuestionAdmin(admin.ModelAdmin):
         return '-'
     get_options.short_description = 'Options'
 
-# Keep your other admin classes as they are
+
 class FormAdmin(admin.ModelAdmin):
     list_display = ('id', 'form_name', 'created_at',)
     search_fields = ('form_name',)
     list_filter = ('created_at',)
     inlines = [QuestionInline]
+
 
 class AnswerInline(admin.TabularInline):
     model = Answer

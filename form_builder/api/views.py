@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,7 +8,7 @@ from .serializers import FormSerializer, QuestionSerializer, ResponseSerializer,
 from django.db import transaction
 
 class FormView(APIView):
-    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         return Form.objects.all()
@@ -18,12 +18,7 @@ class FormView(APIView):
         serializer = FormSerializer(forms, many=True)
         return Response(serializer.data)
 
-    # def post(self, request):
-    #     serializer = FormSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         form = serializer.save()
-    #         return Response(FormSerializer(form).data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 class FormDetailView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly] 
@@ -127,7 +122,7 @@ class AnalyticsView(APIView):
 
 
 class GetResponsesView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminUser]
 
     def get(self, request, form_id):
         try:
@@ -144,3 +139,37 @@ class GetResponsesView(APIView):
         response_data = FormResponseSerializer(responses, many=True).data
 
         return Response({"responses": response_data}, status=status.HTTP_200_OK)
+    
+    
+class CreateFormView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = FormSerializer(data=request.data)
+        if serializer.is_valid():
+            form = serializer.save()
+            return Response({
+                "message": "Form created successfully.",
+                "form": FormSerializer(form).data,
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class AddQuestionView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, form_id):
+        try:
+            form = Form.objects.get(id=form_id)
+        except Form.DoesNotExist:
+            return Response({"detail": "Form not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = QuestionSerializer(data=request.data)
+        if serializer.is_valid():
+     
+            question = serializer.save(form=form)
+            return Response({
+                "message": "Question added successfully.",
+                "question": QuestionSerializer(question).data,
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

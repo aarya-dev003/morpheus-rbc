@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.core.exceptions import ValidationError
 # Create your models here.
 
 class AdminUser(models.Model):
@@ -14,6 +14,13 @@ class Form(models.Model):
     
     def __str__(self):
         return self.form_name
+
+    def save(self, *args, **kwargs):
+        max_rows = 100  
+        if Form.objects.count() >= max_rows:
+            raise ValidationError(f"Cannot add more than {max_rows} rows.")
+        super().save(*args, **kwargs)
+
 
 
 class Question(models.Model):
