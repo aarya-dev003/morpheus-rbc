@@ -39,7 +39,7 @@ This project is a backend implementation of a **Dynamic Form Builder** using Dja
 4. **Run Migrations**
 
     ```bash
-    python manage.py makemigrations
+    python manage.py    
     python manage.py migrate
 
 5. **Create a Superuser**
